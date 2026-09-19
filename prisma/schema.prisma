@@ -1,0 +1,94 @@
+// prisma/schema.prisma
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id               String           @id @default(uuid())
+  firstName        String
+  lastName         String
+  email            String           @unique
+  password         String?
+  role             Role             @default(DISPATCHER)
+  dispatches       DispatchRecord[] @relation("DriverDispatches")
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+}
+
+model Bus {
+  id                String           @id @default(uuid())
+  plateNumber       String           @unique
+  capacity          Int
+  maintenanceStatus Status           @default(ACTIVE)
+  dispatches        DispatchRecord[]
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+}
+
+model Route {
+  id                    String           @id @default(uuid())
+  startLocation         String
+  endLocation           String
+  distanceKm            Float
+  estimatedDurationMins Int
+  cost                  Decimal          @db.Decimal(10, 2)
+  isActive              Boolean          @default(true)
+  dispatches            DispatchRecord[]
+  bookings              Booking[]
+  createdAt             DateTime         @default(now())
+  updatedAt             DateTime         @updatedAt
+
+  @@unique([startLocation, endLocation])
+}
+
+model DispatchRecord {
+  id            String         @id @default(uuid())
+  busId         String
+  driverId      String
+  routeId       String
+  departureTime DateTime
+  status        DispatchStatus @default(SCHEDULED)
+
+  bus           Bus            @relation(fields: [busId], references: [id])
+  driver        User           @relation("DriverDispatches", fields: [driverId], references: [id])
+  route         Route          @relation(fields: [routeId], references: [id])
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
+model Booking {
+  id            String   @id @default(uuid())
+  txRef         String   @unique
+  routeId       String
+  route         Route    @relation(fields: [routeId], references: [id])
+
+  userEmail     String
+  amountPaid    Decimal  @db.Decimal(10, 2)
+  paymentStatus String   @default("pending") // pending, success, failed
+
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum Role {
+  ADMIN
+  DISPATCHER
+}
+
+enum Status {
+  ACTIVE
+  INACTIVE
+  MAINTENANCE
+}
+
+enum DispatchStatus {
+  SCHEDULED
+  IN_TRANSIT
+  COMPLETED
+  CANCELLED
+}
