@@ -8,6 +8,7 @@ import { PrismaModule } from '../../prisma/prisma.module.js';
   // Wrap AuthModule with forwardRef
   imports: [PrismaModule, forwardRef(() => AuthModule)], 
   controllers: [UserController],
-  providers: [UserService]
+  providers: [UserService],
+  exports: [UserService]
 })
 export class UserModule {}
