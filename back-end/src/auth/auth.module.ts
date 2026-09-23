@@ -10,7 +10,10 @@ import { GoogleStrategy } from './strategies/google.strategy.js';
 @Module({
   imports: [
     forwardRef(() => UserModule),
-    PassportModule,
+    PassportModule.register({
+      defaultStrategy: 'jwt',
+      session: false,
+    }),
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '8h' },
@@ -18,7 +21,6 @@ import { GoogleStrategy } from './strategies/google.strategy.js';
   ],
   providers: [AuthService, JwtStrategy, GoogleStrategy],
   controllers: [AuthController],
-  // CRITICAL: This line exposes the Auth config to UserModule and BusModule
-  exports: [AuthService, PassportModule, JwtModule] 
+  exports: [AuthService, PassportModule, JwtModule],
 })
 export class AuthModule {}
