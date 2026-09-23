@@ -1,8 +1,8 @@
 import { Controller, Post, Body, Headers, Req, Res, HttpStatus, UseGuards } from '@nestjs/common';
 import { PaymentService } from './payment.service.js';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js'; 
-import { RolesGuard } from '../auth/roles.guard.js';    
-import { Roles } from '../auth/roles.decorator.js';      
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js'; 
+import { RolesGuard } from '../auth/guards/roles.guard.js';    
+import { Roles } from '../auth/decorators/roles.decorator.js';      
 import { Role } from '@prisma/client';
 import type { Request, Response } from 'express';
 
@@ -10,9 +10,8 @@ import type { Request, Response } from 'express';
 export class PaymentController {
   constructor(private readonly paymentService: PaymentService) {}
 
-  // 🔒 Locked down: Only Admins and Dispatchers can initiate a checkout
+
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.ADMIN, Role.DISPATCHER)
   @Post('checkout')
   async checkout(@Body() body: { routeId: string; userEmail: string; firstName: string; lastName: string }) {
     return this.paymentService.initializePayment(
@@ -31,7 +30,7 @@ export class PaymentController {
     @Req() req: Request,
     @Res() res: Response,
   ) {
-    const rawBody = JSON.stringify(req.body); 
+    const rawBody = JSON.stringify(req.body);
 
     try {
       const result = await this.paymentService.handleChapaWebhook(signature, rawBody);

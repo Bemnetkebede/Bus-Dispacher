@@ -1,10 +1,10 @@
 import { Controller, Get, Post, Body, Param, UseGuards } from '@nestjs/common';
 import { RouteService } from './route.service.js';
 import { CreateRouteDto } from './Dto/Create-Route.js';
-import { Roles } from '../auth/roles.decorator.js';
+import { Roles } from '../auth/decorators/roles.decorator.js';
 import { Role } from '@prisma/client';
-import { JwtAuthGuard } from '../auth/jwt-auth.guard.js';
-import { RolesGuard } from '../auth/roles.guard.js';
+import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard.js';
+import { RolesGuard } from '../auth/guards/roles.guard.js';
 import { Patch } from '@nestjs/common';
 import { UpdateRouteDto } from './Dto/Update-Route.js';
 
@@ -18,14 +18,14 @@ export class RouteController {
     return this.routeService.create(createRouteDto);
   }
   
-  @Roles(Role.ADMIN, Role.DISPATCHER)
+  
   @Get()
   findAll() {
     return this.routeService.findAll();
   }
 
 
-  @Roles(Role.ADMIN, Role.DISPATCHER)
+  
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.routeService.findOne(id);

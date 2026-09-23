@@ -1,15 +1,35 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, ConflictException } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../User/user.service.js';
 import * as bcrypt from 'bcrypt';
+import { PrismaService } from '../../prisma/prisma.service.js';
+import { Role } from '@prisma/client';
+import { RegisterDto } from './dto/register.dto.js';
+import { LoginDto } from './dto/login.dto.js';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly userService: UserService,
     private readonly jwtService: JwtService,
+    private readonly prisma: PrismaService,
   ) {}
 
+  async registerPassenger(registerDto: RegisterDto) {
+    const existing = await this.userService.findByEmail(registerDto.email);
+    if (existing) throw new ConflictException('Email already in use');
+
+    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
+
+    return this.prisma.user.create({
+      data: {
+        ...registerDto,
+        password: hashedPassword
+      },
+      select: { id: true, email: true, role: true, firstName: true }
+    });
+  }
+  
   async googleLogin(req: any) {
     if (!req.user) {
       return { message: 'No user data received from Google' };
@@ -19,21 +39,21 @@ export class AuthService {
     let userEmail: string;
     let userRole: string;
 
-  
     const existingUser = await this.userService.findByEmail(req.user.email);
 
     if (existingUser) {
-      // User exists, grab their details
       userId = existingUser.id;
       userEmail = existingUser.email;
       userRole = existingUser.role;
     } else {
-      // User doesn't exist, create them and grab the new details
-      const newUser = await this.userService.createUser({
-        email: req.user.email,
-        firstName: req.user.firstName,
-        lastName: req.user.lastName,
-        password: '', // Leave password empty for Google users
+      // 🔒 SECURE FIX: Bypass UserService and create directly via Prisma
+      const newUser = await this.prisma.user.create({
+        data: {
+          email: req.user.email,
+          firstName: req.user.firstName || 'Unknown',
+          lastName: req.user.lastName || 'Passenger',
+          password: '',
+        }
       });
       
       userId = newUser.id;
@@ -41,10 +61,8 @@ export class AuthService {
       userRole = newUser.role;
     }
 
-    // Generate the JWT payload using the guaranteed string variables
     const payload = { sub: userId, email: userEmail, role: userRole };
 
-    // Return the token
     return {
       access_token: this.jwtService.sign(payload),
     };
@@ -54,22 +72,18 @@ export class AuthService {
   // 2. TRADITIONAL EMAIL & PASSWORD LOGIN
   // ==========================================
   async login(email: string, pass: string) {
-    // 1. Verify user exists
     const user = await this.userService.findByEmail(email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // 2. Verify password matches the hash in the database
     const isPasswordValid = await bcrypt.compare(pass, user.password || '');
     if (!isPasswordValid) {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    // 3. Generate the JWT payload
     const payload = { sub: user.id, email: user.email, role: user.role };
 
-    // 4. Return the signed token
     return {
       access_token: this.jwtService.sign(payload),
     };

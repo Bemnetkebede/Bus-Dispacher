@@ -30,7 +30,7 @@ export class PaymentService {
         paymentStatus: 'pending',
       },
     });
-
+    
     // 3. Prepare the Chapa Initialize payload
     const payload = {
       amount: amountStr,
@@ -66,7 +66,6 @@ export class PaymentService {
       throw new InternalServerErrorException('Failed to communicate with Chapa');
     }
   }
-
   /**
    * Validates the cryptographic signature and updates the DB if successful
    */
