@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException, ConflictException , forwardRef } from '@nestjs/common';
+import { Injectable, Inject, UnauthorizedException, ConflictException , forwardRef } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { UserService } from '../User/user.service.js';
 import * as bcrypt from 'bcrypt';
