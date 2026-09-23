@@ -10,8 +10,8 @@ import { GoogleStrategy } from './strategies/google.strategy.js';
 
 @Module({
   imports: [
-    forwardRef(() => UserModule), 
-    UserModule,
+    forwardRef(() => UserModule), // Keep this one
+    // REMOVED: UserModule (Do not import it directly)
     PassportModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET,
