@@ -13,7 +13,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
 }
 
   async validate(payload: any) {
-    // NestJS attaches this return object to the `req.user` property
     return { userId: payload.sub, email: payload.email, role: payload.role };
   }
 }

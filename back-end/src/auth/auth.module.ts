@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Global, Module, forwardRef } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { AuthController } from './auth.controller.js';
 import { JwtModule } from '@nestjs/jwt';
@@ -7,10 +7,13 @@ import { UserModule } from '../User/user.module.js';
 import { JwtStrategy } from './strategies/jwt.strategy.js';
 import { GoogleStrategy } from './strategies/google.strategy.js';
 
+@Global()
 @Module({
   imports: [
     forwardRef(() => UserModule),
-    PassportModule,
+    PassportModule.register({
+      defaultStrategy: 'jwt',
+    }),
     JwtModule.register({
       secret: process.env.JWT_SECRET,
       signOptions: { expiresIn: '8h' },
@@ -18,7 +21,6 @@ import { GoogleStrategy } from './strategies/google.strategy.js';
   ],
   providers: [AuthService, JwtStrategy, GoogleStrategy],
   controllers: [AuthController],
-  // CRITICAL: This line exposes the Auth config to UserModule and BusModule
-  exports: [AuthService, PassportModule, JwtModule] 
+  exports: [AuthService, PassportModule, JwtModule],
 })
 export class AuthModule {}
