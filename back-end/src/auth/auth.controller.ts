@@ -10,7 +10,7 @@ export class AuthController {
   // 0. Traditional Email/Password Signup
   @Post('register')
   async register(@Body() RegisterDto: RegisterDto) {
-    return this.authService.registerPassenger(RegisterDto)
+    return this.authService.register(RegisterDto)
   }
 
   // 1. Traditional Email/Password Login

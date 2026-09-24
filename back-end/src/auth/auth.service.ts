@@ -17,7 +17,7 @@ export class AuthService {
     
   ) {}
 
-  async registerPassenger(registerDto: RegisterDto) {
+  async register(registerDto: RegisterDto) {
     const existing = await this.userService.findByEmail(registerDto.email);
     if (existing) throw new ConflictException('Email already in use');
 
